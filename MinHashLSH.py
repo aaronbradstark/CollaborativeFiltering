@@ -20,8 +20,6 @@ def create_signature_matrix(data, permutation):
                     sig_val = r
                     break
             sig_mat[i][c] = sig_val
-    #print(np.shape(sig_mat))
-    #print(sig_mat)
     return sig_mat
 
 def get_b_r_tuples(permutation):
