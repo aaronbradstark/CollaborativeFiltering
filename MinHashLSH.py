@@ -2,7 +2,7 @@ import math
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import time
+import hashlib
 
 
 def create_signature_matrix(data, permutation):
@@ -53,8 +53,12 @@ def get_best_b_r_values(threshold, permutation):
             max_slope = slope_range
             best_probabilities = probabilities
             best_b_r =(b,r)
-    #plt.plot(similar_set,best_probabilities)
-    #plt.show()
+    graph_text = "Permutation = "+ str(permutation)
+    plt.plot(similar_set,best_probabilities)
+    plt.title(graph_text)
+    plt.xlabel("Jaccard Similarities")
+    plt.ylabel("Candidate Probabilities")
+    plt.show()
     return best_b_r
 
 def find_candiate_pairs(bands,rows,signature_matrix):
@@ -131,19 +135,21 @@ def find_fp_fn(signature_matrix,candidate_pairs, data):
      for key in jacc_similarity.keys():
          if jacc_similarity[key] > 0.3 and key not in candidate_pairs:
                 false_negatives +=1
-     return false_positives, false_negatives, sig_false_positives, sig_false_negatives, similar_signatures
+     similar_pairs = len(candidate_pairs)
+     return false_positives, false_negatives, sig_false_positives, sig_false_negatives, similar_signatures, similar_pairs
 
 def perform_collaborative_filtering(data, permutation, threshold):
     signature_matrix = create_signature_matrix(data, permutation)
     b, r = get_best_b_r_values(threshold, permutation)
     candidate_pairs = find_candiate_pairs(b, r, signature_matrix)
-    fp, fn, sig_fp, sig_fn, sim_sig = find_fp_fn(signature_matrix, candidate_pairs, data)
+    fp, fn, sig_fp, sig_fn, sim_sig, sim_pair = find_fp_fn(signature_matrix, candidate_pairs, data)
     print("Permutation Level - " + str(permutation))
     print("Best b value" + str(b))
     print("Best r value" + str(r))
-    print("Similar pair of Signatures - " + str(sim_sig))
     print("FP - Signature " + str(sig_fp), "FN - Signature " + str(sig_fn))
+    print("Similar pair of Signatures - " + str(sim_sig))
     print("FP - Total " + str(fp), "FN - Total " + str(fn))
+    print("Similar Pairs - " + str(sim_pair))
 
 def perform_filtering_complete(data,permutation, threshold):
     signature_matrix = create_signature_matrix(data, permutation)
@@ -155,7 +161,7 @@ def perform_filtering_complete(data,permutation, threshold):
     b_list = []
     for b, r in b_r_tuples:
         candidate_pairs = find_candiate_pairs(b,r,signature_matrix)
-        fp, fn, sig_fp, sig_fn, sim_sig = find_fp_fn(signature_matrix,candidate_pairs,data)
+        fp, fn, sig_fp, sig_fn, sim_sig, sim_pairs= find_fp_fn(signature_matrix,candidate_pairs,data)
         fp_list.append(fp)
         fn_list.append(fn)
         sig_fp_list.append(sig_fp)
@@ -163,6 +169,9 @@ def perform_filtering_complete(data,permutation, threshold):
         b_list.append(b)
     generate_plots(sig_fp_list,sig_fn_list,b_list,"No of Bands Vs Signature FP and FN")
     generate_plots(fp_list,fn_list,b_list,"No of Bands Vs FP and FN")
+    print(b_list,"B List")
+    print(fp_list,"FP List")
+    print(fn_list, "FN List")
 
 def generate_plots(fp_list, fn_list, b_list, graph_text):
     plt.plot(b_list, fp_list, color='orange', label="FP")
@@ -186,7 +195,7 @@ if __name__ == '__main__':
     perform_collaborative_filtering(data,100,0.30)
 
     # Perform collaborative filtering for Permutations = 500
-    # perform_collaborative_filtering(data,500,0.30)
+    #perform_collaborative_filtering(data,500,0.30)
 
     # To calculate the candidate pairs and FPs and FNs for all values of Bands and generate plots
-    #perform_filtering_complete(data,100,0.30)
+    #perform_filtering_complete(data,500,0.30)
